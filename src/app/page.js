@@ -1,95 +1,119 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client';
+import { useEffect, useState } from 'react';
 
-export default function Home() {
+const TaskPage = () => {
+  const [tasks, setTasks] = useState([]);
+  const [taskTitle, setTaskTitle] = useState('');
+  const [filter, setFilter] = useState('all'); // 'all', 'completed', 'incomplete'
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const response = await fetch('/api/tasks');
+        const data = await response.json();
+        setTasks(data);
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+      }
+    };
+    fetchTasks();
+  }, []);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!taskTitle.trim()) return;
+
+    const newTask = { title: taskTitle, completed: false };
+
+    try {
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTask),
+      });
+
+      if (response.ok) {
+        setTaskTitle('');
+        const updatedTasks = await response.json();
+        setTasks(updatedTasks);
+      } else {
+        console.error('Error adding task');
+      }
+    } catch (error) {
+      console.error('Error submitting task:', error);
+    }
+  };
+
+  const handleDelete = async (taskId) => {
+    if (!confirm('¿Estás seguro de que deseas eliminar esta tarea?')) return;
+
+    try {
+      const response = await fetch(`/api/tasks?id=${taskId}`, { method: 'DELETE' });
+
+      if (response.ok) {
+        const updatedTasks = await response.json();
+        setTasks(updatedTasks);
+      } else {
+        console.error('Error deleting task');
+      }
+    } catch (error) {
+      console.error('Error deleting task:', error);
+    }
+  };
+
+  const handleToggleCompletion = async (taskId) => {
+    try {
+      const response = await fetch(`/api/tasks?id=${taskId}`, { method: 'PUT' });
+
+      if (response.ok) {
+        const updatedTasks = await response.json();
+        setTasks(updatedTasks);
+      } else {
+        console.error('Error updating task');
+      }
+    } catch (error) {
+      console.error('Error toggling task completion:', error);
+    }
+  };
+
+  const filteredTasks = tasks.filter((task) => {
+    if (filter === 'all') return true;
+    if (filter === 'completed') return task.completed;
+    if (filter === 'incomplete') return !task.completed;
+    return true;
+  });
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.js</code>.
+    <div>
+      <h1>Lista de Tareas</h1>
+      <div>
+        <button onClick={() => setFilter('all')}>Todas</button>
+        <button onClick={() => setFilter('completed')}>Completadas</button>
+        <button onClick={() => setFilter('incomplete')}>Incompletas</button>
+      </div>
+      <ul>
+        {filteredTasks.map((task) => (
+          <li key={task.id}>
+            {task.completed ? <s>{task.title}</s> : task.title}
+            <button onClick={() => handleToggleCompletion(task.id)}>
+              {task.completed ? 'Marcar como incompleta' : 'Marcar como completada'}
+            </button>
+            <button onClick={() => handleDelete(task.id)}>Eliminar</button>
           </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+        ))}
+      </ul>
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          value={taskTitle}
+          onChange={(e) => setTaskTitle(e.target.value)}
+          placeholder="Añadir una nueva tarea"
+        />
+        <button type="submit">Añadir Tarea</button>
+      </form>
     </div>
   );
-}
+};
+
+export default TaskPage;
