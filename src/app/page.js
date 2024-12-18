@@ -9,8 +9,9 @@ const TaskPage = () => {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const response = await fetch('/api/tasks');
+        const response = await fetch('http://localhost:3000/api/tasks'); // Cambiar la URL
         const data = await response.json();
+        console.log('Tareas obtenidas:', data); // Agregar log para verificar datos
         setTasks(data);
       } catch (error) {
         console.error('Error fetching tasks:', error);
@@ -26,7 +27,7 @@ const TaskPage = () => {
     const newTask = { title: taskTitle, completed: false };
 
     try {
-      const response = await fetch('/api/tasks', {
+      const response = await fetch('http://localhost:3000/api/tasks', { // Cambiar la URL
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newTask),
@@ -48,7 +49,7 @@ const TaskPage = () => {
     if (!confirm('¿Estás seguro de que deseas eliminar esta tarea?')) return;
 
     try {
-      const response = await fetch(`/api/tasks?id=${taskId}`, { method: 'DELETE' });
+      const response = await fetch(`http://localhost:3000/api/tasks?id=${taskId}`, { method: 'DELETE' }); // Cambiar la URL
 
       if (response.ok) {
         const updatedTasks = await response.json();
@@ -63,7 +64,7 @@ const TaskPage = () => {
 
   const handleToggleCompletion = async (taskId) => {
     try {
-      const response = await fetch(`/api/tasks?id=${taskId}`, { method: 'PUT' });
+      const response = await fetch(`http://localhost:3000/api/tasks?id=${taskId}`, { method: 'PUT' }); // Cambiar la URL
 
       if (response.ok) {
         const updatedTasks = await response.json();
