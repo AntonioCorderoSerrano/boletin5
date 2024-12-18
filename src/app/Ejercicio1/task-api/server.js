@@ -1,18 +1,20 @@
 const express = require('express');
-const bodyParser = require('body-parser');
-const taskRoutes = require('./Ejercicio1/task-api/route');
-
+const cors = require('cors');
 const app = express();
-const PORT = 3000;
 
-// Middleware
-app.use(bodyParser.json());
+// Allow requests from localhost:3001
+app.use(cors({
+  origin: 'http://localhost:3001', // or '*' to allow all origins
+  methods: ['GET', 'POST'], // specify allowed methods
+  allowedHeaders: ['Content-Type', 'Authorization'] // specify allowed headers
+}));
 
-// Rutas
-app.use('/api', taskRoutes);
-
-// Iniciar el servidor
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+// Your other routes and middleware
+app.get('/api/tasks', (req, res) => {
+  // Your logic to fetch tasks
+  res.json([...]);
 });
 
+app.listen(3000, () => {
+  console.log('Server running on http://localhost:3000');
+});
